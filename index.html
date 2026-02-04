@@ -5,13 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Minecraft Server Status</title>
 <style>
-/* Full page background using GitHub-hosted GIF */
 body {
     margin: 0;
     padding: 0;
     height: 100vh;
     font-family: 'Arial', sans-serif;
-    background: url('https://raw.githubusercontent.com/sdgamer8263-sketch/Paper-build/main/beaa776788318ffa9adf475282e18bb5.gif') no-repeat center center fixed;
+    background: url('https://raw.githubusercontent.com/sdgamer8263-sketch/Paper-build/main/assets/beaa776788318ffa9adf475282e18bb5.gif') no-repeat center center fixed;
     background-size: cover;
     display: flex;
     justify-content: center;
@@ -40,19 +39,20 @@ h1 {
     animation: glowPulse 2s infinite alternate;
 }
 
-.status {
-    font-size: 1.5em;
+input, select {
     margin-top: 10px;
+    padding: 5px 10px;
+    border-radius: 10px;
+    border: 2px solid #00ffff;
+    background: rgba(0,0,0,0.6);
+    color: #00ffff;
+    font-size: 1em;
+    text-align: center;
 }
 
-.online {
-    color: #00ff00;
-    text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
-}
-
-.offline {
-    color: #ff0000;
-    text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
+input:focus, select:focus {
+    outline: none;
+    border-color: #ff00ff;
 }
 
 button {
@@ -73,23 +73,24 @@ button:hover {
     background: #00ffff;
 }
 
-select, input {
-    margin-top: 10px;
-    padding: 5px 10px;
+.status {
+    font-size: 1.5em;
+    margin-top: 15px;
+    padding: 10px;
     border-radius: 10px;
-    border: 2px solid #00ffff;
-    background: rgba(0,0,0,0.6);
-    color: #00ffff;
-    font-size: 1em;
-    text-align: center;
+    animation: pulseStatus 1.5s infinite alternate;
 }
 
-select:focus, input:focus {
-    outline: none;
-    border-color: #ff00ff;
+.online {
+    color: #00ff00;
+    text-shadow: 0 0 15px #00ff00, 0 0 30px #00ff00, 0 0 45px #00ff00;
 }
 
-/* Neon animations */
+.offline {
+    color: #ff0000;
+    text-shadow: 0 0 15px #ff0000, 0 0 30px #ff0000, 0 0 45px #ff0000;
+}
+
 @keyframes neonPulse {
     0% { text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff; }
     50% { text-shadow: 0 0 20px #ff00ff, 0 0 30px #ff00ff; }
@@ -101,6 +102,12 @@ select:focus, input:focus {
     50% { box-shadow: 0 0 30px #00ffff, 0 0 60px #00ffff; }
     100% { box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff; }
 }
+
+@keyframes pulseStatus {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.8; }
+}
 </style>
 </head>
 <body>
@@ -109,11 +116,14 @@ select:focus, input:focus {
 <div class="status-box">
     <input type="text" id="serverIP" placeholder="Enter server IP or domain">
     <br>
+    <input type="number" id="serverPort" placeholder="Port (default 25565)">
+    <br>
     <select id="serverType">
         <option value="java">Java Edition</option>
         <option value="bedrock">Bedrock Edition</option>
+        <option value="geyser">Geyser (Java+Bedrock)</option>
     </select>
-    <div id="status" class="status">Enter IP and select type</div>
+    <div id="status" class="status">Enter IP, port, and type</div>
     <button onclick="checkServer()">Check Server</button>
 </div>
 
@@ -121,6 +131,7 @@ select:focus, input:focus {
 async function checkServer() {
     const statusEl = document.getElementById('status');
     const ip = document.getElementById('serverIP').value.trim();
+    const port = document.getElementById('serverPort').value.trim() || '';
     const type = document.getElementById('serverType').value;
 
     if (!ip) {
@@ -134,10 +145,15 @@ async function checkServer() {
 
     try {
         let url = "";
+        let serverString = port ? `${ip}:${port}` : ip;
+
         if(type === "java") {
-            url = `https://api.mcsrvstat.us/2/${ip}`;
+            url = `https://api.mcsrvstat.us/2/${serverString}`;
         } else if(type === "bedrock") {
-            url = `https://api.mcsrvstat.us/bedrock/2/${ip}`;
+            url = `https://api.mcsrvstat.us/bedrock/2/${serverString}`;
+        } else if(type === "geyser") {
+            // Geyser usually supports both, use Java API as default
+            url = `https://api.mcsrvstat.us/2/${serverString}`;
         }
 
         const response = await fetch(url);
